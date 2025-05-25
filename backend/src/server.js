@@ -7,12 +7,50 @@ import { upsertDraftPicks, getDraftPicksByTeam, getAllDraftPicks, getTeamByName 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? ['https://lakers-project.vercel.app', 'https://lakers-project-git-main-tariqr.vercel.app'] 
-    : 'http://localhost:5173'
-}));
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log('=== Request Details ===');
+  console.log('Path:', req.path);
+  console.log('Method:', req.method);
+  console.log('Headers:', req.headers);
+  console.log('Query:', req.query);
+  console.log('Body:', req.body);
+  console.log('=== End Request Details ===');
+  next();
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('=== Error Details ===');
+  console.error('Error:', err);
+  console.error('Stack:', err.stack);
+  console.error('=== End Error Details ===');
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: err.message,
+    path: req.path,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Configure CORS based on environment
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? ['https://lakers-project.vercel.app', 'https://lakers-project-git-main-tariqr.vercel.app']
+    : 'http://localhost:5173',
+  methods: ['GET', 'POST'],
+  credentials: true
+};
+
+console.log('CORS configuration:', corsOptions);
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  next();
+});
 
 const BASE_URL = 'https://basketball.realgm.com/nba/draft/future_drafts/team';
 
@@ -94,8 +132,11 @@ app.get('/api/draft-picks/:team', async (req, res) => {
 
 // Endpoint to get draft picks for all teams
 app.get('/api/draft-picks', async (req, res) => {
+  console.log('GET /api/draft-picks - Request received');
   try {
+    console.log('Attempting to fetch all draft picks');
     const picks = await getAllDraftPicks();
+    console.log(`Successfully retrieved ${picks.length} draft picks`);
     
     // Group by team
     const teamGroups = picks.reduce((acc, pick) => {
@@ -116,16 +157,37 @@ app.get('/api/draft-picks', async (req, res) => {
       return acc;
     }, {});
     
+    console.log(`Grouped picks into ${Object.keys(teamGroups).length} teams`);
     res.json(Object.values(teamGroups));
   } catch (error) {
-    console.error('Error fetching data:', error);
-    res.status(500).json({ error: 'Failed to fetch draft picks data' });
+    console.error('Error in /api/draft-picks:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    res.status(500).json({ 
+      error: 'Failed to fetch draft picks data',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  console.log('Health check requested');
+  res.json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
-// Export the Express API
+// Only start the server in development
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Development server running on port ${PORT}`);
+  });
+}
+
 export default app; 

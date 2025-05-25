@@ -11,36 +11,28 @@ dotenv.config({ path: join(__dirname, '../../.env') });
 
 const { Pool } = pg;
 
-let pool;
-
-if (process.env.DATABASE_URL) {
-  // Use connection string in production
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-      rejectUnauthorized: false,
-      require: true
-    }
-  });
-} else {
-  // Use individual connection parameters in development
-  pool = new Pool({
-    user: process.env.PGUSER || 'postgres',
-    host: process.env.PGHOST || 'localhost',
-    database: process.env.PGDATABASE || 'nba_draft_picks',
-    password: process.env.PGPASSWORD || 'postgres',
-    port: process.env.PGPORT || 5432,
-    ssl: {
-      rejectUnauthorized: false,
-      require: true
-    }
-  });
-}
+// Use the production database URL in both environments for now
+// This ensures we're always connecting to the same database
+const pool = new Pool({
+  connectionString: 'postgresql://neondb_owner:npg_f5jlTJ1LQXbF@ep-withered-forest-a58jcs89-pooler.us-east-2.aws.neon.tech/neondb',
+  ssl: {
+    rejectUnauthorized: false,
+    require: true
+  }
+});
 
 // Add error handler
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
-  process.exit(-1);
+});
+
+// Test the connection
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('Error testing database connection:', err);
+  } else {
+    console.log('Database connection successful:', res.rows[0]);
+  }
 });
 
 export default pool; 
