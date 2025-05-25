@@ -1,6 +1,7 @@
-import pool from './config.js';
+import getPool from './config.js';
 
 export async function upsertDraftPicks(teamId, picks) {
+  const pool = getPool();
   let client;
   try {
     client = await pool.connect();
@@ -25,11 +26,13 @@ export async function upsertDraftPicks(teamId, picks) {
     console.error('Error in upsertDraftPicks:', error);
     throw error;
   } finally {
-    if (client) client.release();
+    if (client) await client.release();
+    await pool.end();
   }
 }
 
 export async function getDraftPicksByTeam(teamId) {
+  const pool = getPool();
   let client;
   try {
     client = await pool.connect();
@@ -46,16 +49,18 @@ export async function getDraftPicksByTeam(teamId) {
     console.error('Error in getDraftPicksByTeam:', error);
     throw error;
   } finally {
-    if (client) client.release();
+    if (client) await client.release();
+    await pool.end();
   }
 }
 
 export async function getAllDraftPicks() {
-  console.log('getAllDraftPicks: Starting database query');
+  const pool = getPool();
   let client;
+  
   try {
     client = await pool.connect();
-    console.log('Database connection established');
+    console.log('Connected to database successfully');
     
     const result = await client.query(
       `SELECT t.name as team_name, dp.season, dp.first_rd, dp.second_rd, dp.last_updated
@@ -63,26 +68,30 @@ export async function getAllDraftPicks() {
        JOIN teams t ON t.id = dp.team_id
        ORDER BY t.name, dp.season`
     );
-    console.log(`Query successful, retrieved ${result.rows.length} rows`);
+    
+    console.log(`Retrieved ${result.rows.length} draft picks`);
     return result.rows;
   } catch (error) {
-    console.error('Database Error:', {
+    console.error('Database Error in getAllDraftPicks:', {
       message: error.message,
-      stack: error.stack,
       code: error.code,
-      detail: error.detail
+      stack: error.stack
     });
     throw error;
   } finally {
     if (client) {
-      console.log('Releasing database connection');
-      client.release();
+      await client.release();
+      console.log('Database connection released');
     }
+    // Close the pool in serverless environment
+    await pool.end();
   }
 }
 
 export async function getTeamByName(teamName) {
+  const pool = getPool();
   let client;
+  
   try {
     client = await pool.connect();
     const result = await client.query(
@@ -94,6 +103,7 @@ export async function getTeamByName(teamName) {
     console.error('Error in getTeamByName:', error);
     throw error;
   } finally {
-    if (client) client.release();
+    if (client) await client.release();
+    await pool.end();
   }
 } 
