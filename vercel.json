@@ -20,6 +20,10 @@
       "dest": "/api/$1"
     },
     {
+      "src": "/frontend/(.*)",
+      "dest": "/$1"
+    },
+    {
       "handle": "filesystem"
     },
     {
