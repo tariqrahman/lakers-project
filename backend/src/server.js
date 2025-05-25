@@ -7,7 +7,11 @@ import { upsertDraftPicks, getDraftPicksByTeam, getAllDraftPicks, getTeamByName 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://lakers-project.vercel.app', 'https://lakers-project-git-main-tariqr.vercel.app'] 
+    : 'http://localhost:5173'
+}));
 app.use(express.json());
 
 const BASE_URL = 'https://basketball.realgm.com/nba/draft/future_drafts/team';
@@ -121,4 +125,7 @@ app.get('/api/draft-picks', async (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-}); 
+});
+
+// Export the Express API
+export default app; 
