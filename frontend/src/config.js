@@ -1,5 +1,4 @@
 const isDevelopment = import.meta.env.DEV;
 
-export const API_URL = isDevelopment 
-  ? 'http://localhost:3001' 
-  : ''; 
+// In production, API calls will be made to the same domain
+export const API_URL = isDevelopment ? 'http://localhost:3001' : ''; 
