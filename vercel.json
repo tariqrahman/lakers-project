@@ -23,19 +23,15 @@
       "dest": "backend/api/index.js"
     },
     {
-      "src": "^/assets/(.*)",
+      "handle": "filesystem"
+    },
+    {
+      "src": "/assets/(.*)",
       "dest": "/assets/$1"
     },
     {
-      "src": "^/vite.svg",
-      "dest": "/vite.svg"
-    },
-    {
-      "src": "^/src/(.*)",
-      "dest": "/src/$1"
-    },
-    {
-      "handle": "filesystem"
+      "src": "/(.*\\.[a-z]+$)",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",
