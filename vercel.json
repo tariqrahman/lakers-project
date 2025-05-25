@@ -12,8 +12,8 @@
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist",
-        "buildCommand": "npm run build"
+        "distDir": "frontend/dist",
+        "buildCommand": "cd frontend && npm install && npm run build"
       }
     }
   ],
@@ -23,8 +23,19 @@
       "dest": "backend/api/index.js"
     },
     {
-      "src": "/assets/(.*)",
+      "src": "^/assets/(.*)",
       "dest": "/assets/$1"
+    },
+    {
+      "src": "^/vite.svg",
+      "dest": "/vite.svg"
+    },
+    {
+      "src": "^/src/(.*)",
+      "dest": "/src/$1"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
